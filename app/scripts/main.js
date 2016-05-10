@@ -11,8 +11,15 @@ const colours = [
   ['#ED8EEE', '#F0A4F1', '#F4BBF4', '#F7D1F8', '#FBE8FB'] // mauve
 ];
 
-const maxLevels = 3;
+const maxLevels = 5;
 
+const chart = d3.select('#chart');
+
+const { width } = chart.node().getBoundingClientRect(),
+  height = width / 2;
+
+
+// Make random data
 const makeRow = (i, rowCount) => {
   let dataRow = [],
     x0 = 0;
@@ -29,44 +36,48 @@ const makeRow = (i, rowCount) => {
     };
     if (i < maxLevels) {
       item.children = makeRow(i+1);
+      item.x = d3.scale.linear()
+        .domain([0, d3.max(item.children.map(d => d.x1))])
+        .range([0, width]);
     }
     dataRow.push(item);
   }
   return dataRow;
 };
 
-// Make random data
-var data = makeRow(0, 7);
-
-console.log(data);
-
-
-const chart = d3.select('#chart');
-
-const { width } = chart.node().getBoundingClientRect(),
-  height = width / 2;
+let data = makeRow(0, 7);
 
 let x = d3.scale.linear()
   .domain([0, d3.max(data.map(d => d.x1))])
   .range([0, width]);
 
 const y = d3.scale.ordinal()
-  .domain([0,1,2,3])
+  .domain([0,1,2,3,4,5])
   .rangeRoundBands([0, height], 0.2);
 
-let addRow = (d) => {
+let svg = chart.append('svg')
+  .attr('width', width)
+  .attr('height', height);
+
+
+const addRow = (d, x) => {
   if (!d.children) {
     return;
   }
-  d3.selectAll('.row' + d.level)
+
+  // Remove existing rows
+  svg.selectAll('.row')
+    .filter(dd => dd >= d.level)
     .transition()
-    .attr('opacity', 0);
+    .attr('opacity', 0)
+    .remove();
 
   let row = svg.append('g')
-    .attr('class', 'row row' + d.level);
+    .datum(d.level)
+    .attr('class', 'row');
 
   row.attr('opacity', 0)
-    .attr('transform', `translate(0,${ y(d.level) })`)
+    .attr('transform', `translate(0,${ y(d.level) || 0 })`)
     .transition()
     .duration(777)
     .attr('opacity', 1)
@@ -77,39 +88,29 @@ let addRow = (d) => {
     .enter()
     .append('rect')
     .attr('fill', dd => dd.color)
-    .attr('x',  x(d.x0))
-    .attr('width',  x(d.val))
+    .attr('x',  x(d.x0 || 0))
+    .attr('width',  x(d.val || 0))
     .attr('y', 0)
-    .attr('height', 100)
-    .on('click', addRow);
-
-  x.domain([0, d3.max(d.children.map(dd => dd.x1))]);
+    .attr('height', y.rangeBand())
+    .on('click', dd => addRow(dd, d.x))
+    .on('mouseover', (dd) => {
+      if (d.level+2 < colours.length) {
+        rect.filter(ddd => dd === ddd).attr('fill', colours[d.level+2][0]);
+      }
+    })
+    .on('mouseout', () => {
+      rect.attr('fill', dd => dd.color);
+    });
 
   rect.transition()
     .duration(777)
-    .attr('width',  dd => x(dd.val))
-    .attr('x',  dd => x(dd.x0));
+    .attr('width',  dd => d.x(dd.val))
+    .attr('x',  dd => d.x(dd.x0));
 };
 
-let svg = chart.append('svg')
-  .attr('width', width)
-  .attr('height', height);
+addRow({
+  children: data,
+  level: -1,
+  x
+}, x);
 
-let row = svg.append('g')
-  .attr('class', 'row')
-  .attr('transform', `translate(0,${ y(0) })`);
-
-row.selectAll('rect')
-  .data(data)
-  .enter()
-  .append('rect')
-  .attr('fill', d => d.color)
-  .attr('y', 0)
-  .attr('height', 100)
-  .attr('x',  0)
-  .attr('width',  0)
-  .on('click', addRow)
-  .transition()
-  .duration(777)
-  .attr('width',  d => x(d.val))
-  .attr('x',  d => x(d.x0));

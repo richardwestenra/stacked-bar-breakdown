@@ -5,3 +5,15 @@ $icon-font-path: '../fonts/';
 // endbower
 
 @import "boilerplate";
+
+
+.row {
+  rect {
+    cursor: pointer;
+    transition: all ease 0.1s;
+    &:hover {
+      // fill-opacity: 0.8;
+      // stroke: rgba(#000,0.2);
+    }
+  }
+}
