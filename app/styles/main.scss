@@ -17,3 +17,39 @@ $icon-font-path: '../fonts/';
     }
   }
 }
+
+#chart {
+  position: relative;
+}
+
+#tooltip {
+  position: absolute;
+  opacity: 0;
+  padding: 5px 10px;
+  color: #333;
+  background: rgba(white,0.9);
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(#000,0.2);
+  margin: -23px 0 0 -15px;
+  white-space: nowrap;
+  pointer-events: none;
+  width: auto;
+  transition: opacity ease 0.2s, transform ease 0.2s;
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(-10px);
+  }
+
+  &:after {
+    content: '';
+    position: absolute;
+    left: 10px;
+    bottom: -8px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 8px 8px 0 8px;
+    border-color: rgba(white,0.9) transparent transparent transparent;
+  }
+}

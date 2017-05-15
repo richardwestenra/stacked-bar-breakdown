@@ -14,6 +14,7 @@ const colours = [
 const maxLevels = 5;
 
 const chart = d3.select('#chart');
+const tooltip = d3.select('#tooltip');
 
 const { width } = chart.node().getBoundingClientRect(),
   height = width / 2;
@@ -97,9 +98,16 @@ const addRow = (d, x) => {
       if (d.level+2 < colours.length) {
         rect.filter(ddd => dd === ddd).attr('fill', colours[d.level+2][0]);
       }
+      tooltip.classed('visible', true)
+        .style({
+          top: `${y(d.level + 1)}px`,
+          left: `${d.x(dd.x0) + d.x(dd.val) / 2}px`
+        })
+        .text(`Lorem ipsum: ${dd.val}`);
     })
     .on('mouseout', () => {
       rect.attr('fill', dd => dd.color);
+      tooltip.classed('visible', false);
     });
 
   rect.transition()
